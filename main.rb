@@ -10,11 +10,16 @@ TURNIN = File.join(
 	ENV['USER'].split('.').last
 )
 
-PRINTHTML = File.absolute_path("printhtml.exe")
 BULLZIP_PATH = "C:/Program Files/Bullzip/PDF Printer"
 PDFCONFIG = "C:/Program Files/Bullzip/PDF Printer/API/EXE/config.exe"
 DHTML_PATH = "C:/Program Files (x86)/Common Files/microsoft shared/DhtmlEd"
 GRADING_PATH = File.read(File.join(Dir.home,'.grading_path')) rescue nil
+BIN_DIR = File.expand_path 'bin'
+PRINTHTML = File.absolute_path("printhtml.exe")
+
+Shoes.setup do 
+	gem 'rouge'
+end
 
 GradingTool = Shoes.app title: 'IT105 Grading Tool', height: 555 do
 	ready = proc do 
@@ -35,10 +40,14 @@ GradingTool = Shoes.app title: 'IT105 Grading Tool', height: 555 do
 
 	setup = Page.new title: 'Setup' do 
 		stack margin_left: 50, margin_right: 50 do 
-			para "There is some setup that needs to be done before the Grading Tool can run:"
+			refresh = link 'refresh', underline: 'none' do 
+				(ready.call ? sections : setup).display
+			end
+		
+			para "There is some setup that needs to be done before the Grading Tool can run. Click ", refresh, " when you're done."
 			
 			if GRADING_PATH.nil? or not File.directory? GRADING_PATH
-				para link("• Choose a grading folder", underline: 'none', size: 'xx-large') {
+				para " • ", link("Choose a grading folder", underline: 'none', size: 'xx-large') {
 					GRADING_PATH = ask_open_folder()
 					File.write File.join(Dir.home,'.grading_path'), GRADING_PATH
 					(ready.call ? sections : setup).display
@@ -46,15 +55,21 @@ GradingTool = Shoes.app title: 'IT105 Grading Tool', height: 555 do
 			end
 			
 			unless File.directory? BULLZIP_PATH
-				para link("• Install the PDF converter", underline: 'none') {
-					`explorer.exe "bin/Setup_BullzipPDFPrinter_10_25_0_2552_PRO_EXP.exe"`
+				para " • ", link("Install the PDF converter", underline: 'none', size: 'xx-large') {
+					exe = 'Setup_BullzipPDFPrinter_10_25_0_2552_PRO_EXP.exe'
+					path = File.join(BIN_DIR,exe)
+					`explorer.exe "#{path.gsub('/','\\')}"`
+					
 					(ready.call ? sections : setup).display
 				}
 			end
 			
 			unless File.directory? DHTML_PATH
-				para link("• Install ", underline: 'none') {
-					`explorer.exe "bin/DhtmlEd.msi"`
+				para " • ", link("Install DHTML Editing Control", underline: 'none', size: 'xx-large') {
+					exe = 'DhtmlEd.msi'
+					path = File.join(BIN_DIR,exe)
+					`explorer.exe "#{path.gsub('/','\\')}"`
+					
 					(ready.call ? sections : setup).display
 				}
 			end

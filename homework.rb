@@ -70,7 +70,7 @@ class Homework
 	def make_pdf
 		pdf = filename.sub(/\.py$/,'.pdf')
 		graded = File.join(student.grading_path, pdf)
-		
+
 		unless File.exists? graded
 			py = File.join(student.grading_path, filename)
 			
@@ -83,11 +83,13 @@ class Homework
 				end
 			end
 		end
+		
+		graded
 	end
 	
 	def pdf
-		make_pdf
-		`explorer.exe "#{graded.tr("/","\\")}"`
+		pdf = make_pdf
+		`explorer.exe "#{pdf.tr("/","\\")}"`
 	end
 	
 	def open
