@@ -13,7 +13,7 @@ TURNIN = File.join(
 BULLZIP_PATH = "C:/Program Files/Bullzip/PDF Printer"
 PDFCONFIG = "C:/Program Files/Bullzip/PDF Printer/API/EXE/config.exe"
 DHTML_PATH = "C:/Program Files (x86)/Common Files/microsoft shared/DhtmlEd"
-GRADING_PATH = File.read(File.join(Dir.home,'.grading_path')) rescue nil
+GRADING_PATH = '//usmasvddeecs/eecs/s&f/users/king/classes/it105/grading/'
 BIN_DIR = File.expand_path 'bin'
 PRINTHTML = File.absolute_path("printhtml.exe")
 

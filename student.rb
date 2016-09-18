@@ -8,8 +8,8 @@ class Student < Page
 	def initialize section, folder, breadcrumbs: []
 		student = self
 		@name = File.basename(folder).split('_').first
-		@grading_path = File.absolute_path File.join(folder,'Homework')
-		@submission_path = File.join(TURNIN,section.hour,File.basename(folder),'Homework')
+		@grading_path = File.absolute_path folder
+		@submission_path = File.join(TURNIN,section.hour,File.basename(folder))
 		
 		super title: student.name, breadcrumbs: breadcrumbs do
 			icon = File.join(Dir.getwd,"arrow.png")
@@ -33,20 +33,27 @@ class Student < Page
 					end
 				
 					button 'Open Grading Folder', width: '50%' do 
-						`explorer.exe #{student.grading_path.tr("/","\\")}`
+						`explorer.exe "#{student.grading_path.tr("/","\\")}"`
 					end
 				end
-								
-				student.submitted = Dir["#{student.submission_path}/*.py"].sort do |a,b|
-					File.mtime(b) <=> File.mtime(a)
-				end.map {|f| File.basename f}
 				
-				student.grading = Dir["#{student.grading_path}/*.py"].sort do |a,b|
+				pwd = Dir.pwd
+				Dir.chdir student.submission_path
+				
+				student.submitted = Dir["**/*.py"].sort do |a,b|
 					File.mtime(b) <=> File.mtime(a)
-				end.map {|f| File.basename f}
+				end
+				
+				Dir.chdir student.grading_path
+				
+				student.grading = Dir["**/*.py"].sort do |a,b|
+					File.mtime(b) <=> File.mtime(a)
+				end
+				
+				Dir.chdir pwd
 				
 				(student.submitted | student.grading).each do |file| 
-					Homework.new(student, File.basename(file)).display self
+					Homework.new(student, file).display self
 				end
 			end
 		end

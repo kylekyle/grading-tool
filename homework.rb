@@ -15,7 +15,10 @@ class Homework
 		else
 			collected = File.join(student.grading_path, filename)
 			submitted = File.join(student.submission_path, filename)
-		
+			
+			dirname = File.dirname collected
+			FileUtils.mkdir dirname unless File.exists? dirname
+			
 			File.write collected, File.read(submitted)
 		end
 	end
@@ -54,13 +57,8 @@ class Homework
 	end
 	
 	def can_return?
-		if collected?
-			receipts = Dir["#{student.grading_path}/*.receipt"]
-			filenames = receipts.map {|f| File.basename f, '.receipt'}
-			not filenames.include? File.basename(filename, '.py')
-		else
-			false
-		end
+		receipt = filename.sub(/\.py$/,'.receipt')
+		collected? and not File.exists? File.join(student.grading_path, receipt)
 	end
 	
 	def collected?
@@ -91,6 +89,16 @@ class Homework
 		pdf = make_pdf
 		`explorer.exe "#{pdf.tr("/","\\")}"`
 	end
+
+	def print
+		pdf = filename.sub(/\.py$/,'.pdf')
+		graded = File.join(student.grading_path, pdf)
+		make_pdf unless File.exists? graded
+		
+		Thread.new do 
+			`"C:\\Program Files (x86)\\Foxit Software\\Foxit Reader\\FoxitReader.exe" /t "#{graded.tr("/","\\")}" \\\\usmasvddshugart\\USMAPRDDTH1128C`
+		end
+	end
 	
 	def open
 		make_pdf
@@ -103,14 +111,22 @@ class Homework
 		
 		slot.app do
 			slot.append do 
-				flow do 
-					para homework.filename, size: 'xx-large', align: 'center'
+				flow do
+					dirname = File.dirname homework.filename
+					filename = File.basename(homework.filename,'.py')
+					stack do 
+						para filename, size: 'xx-large', align: 'center', margin_bottom: 5
+						unless dirname == '.'
+							para dirname, stroke: green, size: 'xx-small', align: 'center', margin_top: 0, margin_bottom: 5
+						end
+					end
 				end
 				
 				flow margin_bottom: 30 do
 					buttons = [
 						{ name: 'Collect', action: :collect, disable: :collected? },
 						{ name: 'Return', action: :return_homework, enable: :can_return? },
+						{ name: 'Print', action: :print, enable: :collected? },
 						{ name: 'Open', action: :open, enable: :collected? },
 						{ name: 'Open PDF', action: :pdf, enable: :collected? }
 					]
@@ -122,7 +138,7 @@ class Homework
 							homework.send(info[:enable]) ? nil : 'disabled'
 						end
 							
-						button info[:name], width: '25%', state: state do
+						button info[:name], width: "#{100.0/buttons.size}%", state: state do
 							homework.send info[:action]
 							homework.student.display
 						end

@@ -1,3 +1,5 @@
+require 'securerandom'
+
 class Section < Page	
 	attr :hour
 	attr :students
@@ -13,7 +15,8 @@ class Section < Page
 		super title: "#{hour} Hour", breadcrumbs: breadcrumbs do 
 			flow do 
 				random = link strong('Random'), underline: 'none' do 
-					alert students.sample.name
+					n = SecureRandom.random_number students.size
+					alert students[n].name
 				end
 				para random, top: 0, align: 'right'
 				
