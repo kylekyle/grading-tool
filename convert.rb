@@ -11,12 +11,14 @@ class ConvertToPDF
 		html = formatter.format(lexer.lex(source))
 		wrapped = "<pre style='word-wrap: break-word; width: 800px;'>#{html}</pre>"
 		
-		# convert to PDF
-		`"#{PDFCONFIG.tr("/","\\")}" /C`
-		`"#{PDFCONFIG.tr("/","\\")}" /S "Output" "#{output_path.tr("/","\\")}"`
-		`"#{PDFCONFIG.tr("/","\\")}" /S "ShowSettings" "never"`
-		`"#{PDFCONFIG.tr("/","\\")}" /S "ConfirmOverwrite" "yes"`
-		`"#{PDFCONFIG.tr("/","\\")}" /S "ShowPDF" "no"`
-		`"#{PRINTHTML.tr("/","\\")}" html="#{wrapped.gsub('"','""')}"`
+		Dir.mktmpdir do |dir|
+			path = File.join(dir,'code.html')
+			File.write path, wrapped
+			html path, output_path
+		end
+	end
+	
+	def self.html input_path, output_path
+		`"#{WKPDFTOHTML.tr("/","\\")}" "#{input_path.tr('/','\\')}" "#{output_path.tr('/','\\')}"`
 	end
 end

@@ -40,13 +40,13 @@ class Student < Page
 				pwd = Dir.pwd
 				Dir.chdir student.submission_path
 				
-				student.submitted = Dir["**/*.py"].sort do |a,b|
+				student.submitted = Dir["**/*.{py,html}"].sort do |a,b|
 					File.mtime(b) <=> File.mtime(a)
 				end
 				
 				Dir.chdir student.grading_path
 				
-				student.grading = Dir["**/*.py"].sort do |a,b|
+				student.grading = Dir["**/*.{py,html}"].sort do |a,b|
 					File.mtime(b) <=> File.mtime(a)
 				end
 				

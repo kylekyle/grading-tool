@@ -18,6 +18,7 @@ class Section < Page
 					n = SecureRandom.random_number students.size
 					alert students[n].name
 				end
+				
 				para random, top: 0, align: 'right'
 				
 				students.each do |student|

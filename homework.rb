@@ -24,7 +24,7 @@ class Homework
 	end
 	
 	def return_homework
-		pdf = filename.sub(/\.py$/,'.pdf')
+		pdf = filename.sub(/\..*$/i,'.pdf')
 		graded = File.join(student.grading_path, pdf)
 		returned = File.join(student.submission_path, pdf)
 		
@@ -48,7 +48,7 @@ class Homework
 			end
 			
 			if generate_receipt
-				receipt = graded.sub(/\.pdf$/,'.receipt')
+				receipt = graded.sub(/\..*$/i,'.receipt')
 				File.write receipt, Time.now
 			end
 			
@@ -57,7 +57,7 @@ class Homework
 	end
 	
 	def can_return?
-		receipt = filename.sub(/\.py$/,'.receipt')
+		receipt = filename.sub(/\..*$/i,'.receipt')
 		collected? and not File.exists? File.join(student.grading_path, receipt)
 	end
 	
@@ -66,15 +66,20 @@ class Homework
 	end
 	
 	def make_pdf
-		pdf = filename.sub(/\.py$/,'.pdf')
+		pdf = filename.sub(/\..*$/i,'.pdf')
 		graded = File.join(student.grading_path, pdf)
 
 		unless File.exists? graded
-			py = File.join(student.grading_path, filename)
+			ungraded = File.join(student.grading_path, filename)
 			
-			if File.exists? py 
-				ConvertToPDF.python py, graded
-				sleep 1
+			if File.exists? ungraded 
+				case File.extname(ungraded)
+				when '.py'
+					ConvertToPDF.python ungraded, graded
+				when '.html'
+					submitted = File.join(student.submission_path, filename)
+					ConvertToPDF.html submitted, graded
+				end
 			else
 				GradingTool.app do 
 					alert("#{pdf} not found!")
@@ -86,12 +91,19 @@ class Homework
 	end
 	
 	def pdf
-		pdf = make_pdf
-		`explorer.exe "#{pdf.tr("/","\\")}"`
+		pdf = make_pdf.tr("/","\\")
+
+		if File.exists? pdf
+			`start "" "#{pdf}"`
+		else
+			GradingTool.app do 
+				alert("Could not create #{pdf}")
+			end
+		end
 	end
 
 	def print
-		pdf = filename.sub(/\.py$/,'.pdf')
+		pdf = filename.sub(/\..*$/i,'.pdf')
 		graded = File.join(student.grading_path, pdf)
 		make_pdf unless File.exists? graded
 		
@@ -103,7 +115,7 @@ class Homework
 	def open
 		make_pdf
 		path = File.join(student.grading_path, filename)
-		`explorer.exe "#{path.tr("/","\\")}"`
+		`start "" "#{path.tr("/","\\")}"`
 	end
 	
 	def display slot 

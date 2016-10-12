@@ -10,12 +10,9 @@ TURNIN = File.join(
 	ENV['USER'].split('.').last
 )
 
-BULLZIP_PATH = "C:/Program Files/Bullzip/PDF Printer"
-PDFCONFIG = "C:/Program Files/Bullzip/PDF Printer/API/EXE/config.exe"
-DHTML_PATH = "C:/Program Files (x86)/Common Files/microsoft shared/DhtmlEd"
-GRADING_PATH = '//usmasvddeecs/eecs/s&f/users/king/classes/it105/grading/'
-BIN_DIR = File.expand_path 'bin'
-PRINTHTML = File.absolute_path("printhtml.exe")
+CONFIG = File.join(Dir.home, '.grading_path')
+GRADING_PATH = File.read(CONFIG).tr("\\","/") rescue nil
+WKPDFTOHTML = "C:/Program Files/wkhtmltopdf/bin/wkhtmltopdf.exe"
 
 Shoes.setup do 
 	gem 'rouge'
@@ -23,13 +20,13 @@ end
 
 GradingTool = Shoes.app title: 'IT105 Grading Tool', height: 555 do
 	ready = proc do 
-		[BULLZIP_PATH, DHTML_PATH, GRADING_PATH].all? do |path| 
-			not path.nil? and File.directory? path
+		[WKPDFTOHTML, GRADING_PATH].all? do |path| 
+			not path.nil? and File.exists? path
 		end
 	end
 	
 	sections = Page.new title: 'Sections' do 
-		Dir["#{GRADING_PATH}/*"].select{|d| File.directory?(d)}.each do |hour|
+		Dir["#{GRADING_PATH}/[A-Z]"].select{|d| File.directory?(d)}.each do |hour|
 			display = File.basename hour
 			section_link = 	link "#{display} Hour", underline: 'none' do 
 				Section.new(hour, breadcrumbs: [sections]).display
@@ -54,23 +51,9 @@ GradingTool = Shoes.app title: 'IT105 Grading Tool', height: 555 do
 				}
 			end
 			
-			unless File.directory? BULLZIP_PATH
+			unless File.exists? WKPDFTOHTML
 				para " • ", link("Install the PDF converter", underline: 'none', size: 'xx-large') {
-					exe = 'Setup_BullzipPDFPrinter_10_25_0_2552_PRO_EXP.exe'
-					path = File.join(BIN_DIR,exe)
-					`explorer.exe "#{path.gsub('/','\\')}"`
-					
-					(ready.call ? sections : setup).display
-				}
-			end
-			
-			unless File.directory? DHTML_PATH
-				para " • ", link("Install DHTML Editing Control", underline: 'none', size: 'xx-large') {
-					exe = 'DhtmlEd.msi'
-					path = File.join(BIN_DIR,exe)
-					`explorer.exe "#{path.gsub('/','\\')}"`
-					
-					(ready.call ? sections : setup).display
+					`start "" "\\\\usmasvddeecs\\eecs\\S&F\\Users\\King\\Software\\wkhtmltox-0.12.3.2_msvc2013-win64.exe"`
 				}
 			end
 		end
